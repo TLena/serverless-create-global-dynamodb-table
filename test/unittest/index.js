@@ -617,12 +617,12 @@ describe('test createGlobalTable function', () => {
       missingRegions: [],
       addingNewRegions: false
     }));
-    await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v1',true, serverless.cli);
+    await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v1',null, true, serverless.cli);
     sandbox.assert.notCalled(dynamodb.createGlobalTable);
   });
 
   it ('should create global table', async () => {
-    await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v1', true, serverless.cli);
+    await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v1', null, true, serverless.cli);
     sandbox.assert.calledOnce(dynamodb.createGlobalTable);
   });
 
@@ -632,14 +632,14 @@ describe('test createGlobalTable function', () => {
       missingRegions: ['us-west-1'],
       addingNewRegions: true
     }));
-    await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v1', true, serverless.cli);
+    await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v1', null, true, serverless.cli);
     sandbox.assert.notCalled(dynamodb.createGlobalTable);
     sandbox.assert.calledOnce(dynamodb.updateGlobalTable);
   });
   
   context("when create stack is false", () => {
     it ('should create the table with ProvisionedThroughput if billing mode is not PAY_PER_REQUEST', async () => {
-      await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v1', false, serverless.cli);
+      await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v1', null, false, serverless.cli);
       sandbox.assert.calledOnce(dynamodb.describeTable);
       plugin.createNewTableAndSetScalingPolicy.lastCall.args[2].should.eql({ AttributeDefinitions: {},
         KeySchema: '',
@@ -661,7 +661,7 @@ describe('test createGlobalTable function', () => {
     
     it ('should create the table without ProvisionedThroughput if billing mode is PAY_PER_REQUEST', async () => {
       stubbedTable.Table.BillingModeSummary = { BillingMode: "PAY_PER_REQUEST" };
-      await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v1', false, serverless.cli);
+      await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v1', null, false, serverless.cli);
       sandbox.assert.calledOnce(dynamodb.describeTable);
       plugin.createNewTableAndSetScalingPolicy.lastCall.args[2].should.eql({ AttributeDefinitions: {},
         KeySchema: '',
@@ -680,7 +680,7 @@ describe('test createGlobalTable function', () => {
 
     it ('should create the table by using v2 version', async () => {
       stubbedTable.Table.BillingModeSummary = { BillingMode: "PAY_PER_REQUEST" };
-      await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v2', false, serverless.cli);
+      await plugin.createGlobalTable(aas, dynamodb, serverless.getProvider().getCredentials(), 'us-west-2', 'test-table', ['us-east-2'], 'v2', null, false, serverless.cli);
       sandbox.assert.calledOnce(dynamodb.updateTable);
       sandbox.assert.calledTwice(dynamodb.waitFor);
     });

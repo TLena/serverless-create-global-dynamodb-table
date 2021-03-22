@@ -235,7 +235,7 @@ const getRegionsToCreateGlobalTablesIn = async function getRegionsToCreateGlobal
  * @param {Object} cli Serverless cli object
  */
 const createGlobalTable = async function createGlobalTable(
-  appAutoScaling, dynamodb, creds, region, tableName, newRegions, version, createStack, cli
+  appAutoScaling, dynamodb, creds, region, tableName, newRegions, version, kmsKey, createStack, cli
 ) {
 
   const { missingRegions: regionsToUpdate, addingNewRegions } = await module.exports.getRegionsToCreateGlobalTablesIn(
@@ -314,7 +314,7 @@ const createGlobalTable = async function createGlobalTable(
   }
 
   if (version === 'v2') {
-    await module.exports.createGlobalTableV2(dynamodb, tableName, regionsToUpdate, cli);
+    await module.exports.createGlobalTableV2(dynamodb, tableName, regionsToUpdate, kmsKey, cli);
   } else {
     await module.exports.createGlobalTableV1(dynamodb, tableName, region, regionsToUpdate, addingNewRegions, cli);
   }
@@ -344,12 +344,15 @@ const createGlobalTableV1 = async function createGlobalTableV1(dynamodb, tableNa
   cli.consoleLog(`CreateGlobalTable: ${chalk.yellow(`Created global table setup (Version 2017.11.29) for ${tableName}...`)}`)
 }
 
-const createGlobalTableV2 = async function createGlobalTableV2(dynamodb, tableName, regionsToUpdate, cli) {
+const createGlobalTableV2 = async function createGlobalTableV2(dynamodb, tableName, regionsToUpdate, kmsKey, cli) {
   cli.consoleLog(`CreateGlobalTable: ${chalk.yellow(`Create global table setup (Version 2019.11.21) for ${tableName}...`)}`)
   for (const region of regionsToUpdate) {
     const params = {
       TableName: tableName,
-      ReplicaUpdates: [{ Create:{ RegionName: region }}],
+      ReplicaUpdates: [{ Create:{
+        RegionName: region,
+        KMSMasterKeyId: kmsKey ? kmsKey : undefined
+      }}],
     }
     cli.consoleLog(`CreateGlobalTable: ${chalk.yellow(`Wait for ${tableName} replication available...`)}`)
     await dynamodb.waitFor('tableExists', {TableName: tableName}).promise(); // it's gonna wait for "Active" status
@@ -454,6 +457,7 @@ const createGlobalDynamodbTable = async function createGlobalDynamodbTable(serve
           tableName,
           globalTablesOptions.regions,
           globalTablesOptions.version,
+          globalTablesOptions.kmsKey,
           true,
           cli
         )
